@@ -1,1 +1,3 @@
 # goutil
+
+Convenient Functions
