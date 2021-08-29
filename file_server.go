@@ -5,6 +5,14 @@ import (
 	"strings"
 )
 
+func NewFileServer(fs http.FileSystem) *FileSystem {
+	fileSystem := &FileSystem{
+
+		FS: fs,
+	}
+	return fileSystem
+}
+
 type FileSystem struct {
 	FS http.FileSystem
 }

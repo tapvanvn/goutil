@@ -2,14 +2,13 @@ package goutil
 
 import (
 	"errors"
-	"log"
+	"io"
 	"os"
 	"time"
 )
 
 func NewBufferFile(fileName string, data []byte) *BufferFile {
 
-	log.Fatal("not ready yet")
 	file := &BufferFile{
 		fileName: fileName,
 		data:     data,
@@ -41,8 +40,18 @@ func (f *BufferFile) Close() error {
 
 //io.Reader
 func (f *BufferFile) Read(b []byte) (n int, err error) {
-	err = nil
-	return
+	n, err = f.ReadAt(b, f.offset)
+	f.offset += int64(n)
+
+	return n, err
+}
+
+func (f *BufferFile) ReadAt(b []byte, offset int64) (n int, err error) {
+	if n = copy(b, f.data[offset:]); n == 0 {
+		return n, io.EOF
+	} else {
+		return n, nil
+	}
 }
 
 //io.Seeker
@@ -71,5 +80,7 @@ func (f *BufferFile) Readdir(count int) ([]os.FileInfo, error) {
 }
 
 func (f *BufferFile) Stat() (os.FileInfo, error) {
-	return nil, nil
+	return &BufferFileInfo{
+		file: f,
+	}, nil
 }
