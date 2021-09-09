@@ -4,129 +4,126 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
-	"log"
 	"net"
 	"net/mail"
 	"net/smtp"
-	"os"
 	"strings"
 )
 
-type smtpServer struct {
-	host string
-	port string
+func NewSmtpServer(host string, port string, account string, password string) *SmtpServer {
+	return &SmtpServer{
+		host:           host,
+		port:           port,
+		auth:           smtp.PlainAuth("", account, password, host),
+		emailAddresses: map[string]string{},
+	}
 }
 
-func (s *smtpServer) Address() string {
+type SmtpServer struct {
+	host           string
+	port           string
+	auth           smtp.Auth
+	emailAddresses map[string]string
+}
+
+func (s *SmtpServer) Address() string {
+
 	return s.host + ":" + s.port
 }
 
-//SendEmail send a email of message to a list of user
-func SendEmail(to []string, title string, message string) error {
-	port := os.Getenv("SMTP_PORT")
+func (s *SmtpServer) AddEmailAddress(name string, emailAddress string) error {
 
-	if port == "465" {
-		return sendEmailSSL(to, title, message)
-	} else if port == "587" {
-		return sendEmailTLS(to, title, message)
+	address, err := FormatEmailAddress(emailAddress)
+
+	if err != nil {
+
+		return err
 	}
-	log.Panic("smtp server is not set")
+	s.emailAddresses[address] = name
+
 	return nil
 }
 
-func sendEmailTLS(to []string, title string, message string) error {
-	from := os.Getenv("SMTP_ACCOUNT")
+func (s *SmtpServer) SendEmail(from string, to string, title string, message string) error {
 
-	password := os.Getenv("SMTP_PASSWORD")
+	messageBytes := ComposeMimeMail(to, from, title, message)
 
-	smtpServer := smtpServer{host: os.Getenv("SMTP_SERVER"), port: "587"}
+	if s.port == "465" {
 
-	messageBytes := composeMimeMail(to[0], from, title, message)
+		smtp.SendMail(s.Address(), s.auth, from, []string{to}, messageBytes)
 
-	auth := smtp.PlainAuth("", from, password, smtpServer.host)
+	} else if s.port == "587" {
 
-	return smtp.SendMail(smtpServer.Address(), auth, from, to, messageBytes)
-}
+		fromTitle := ""
+		revTitle := ""
 
-func sendEmailSSL(to []string, title string, message string) error {
-	from := mail.Address{"", os.Getenv("SMTP_ACCOUNT")}
-	rev := mail.Address{"", to[0]}
-	//subj := "This is the email subject"
+		if testTitle, ok := s.emailAddresses[from]; ok {
+			fromTitle = testTitle
+		}
 
-	// Setup headers
-	//headers := make(map[string]string)
-	//headers["From"] = from.String()
-	//headers["To"] = rev.String()
-	//headers["Subject"] = subj
+		fromAddress := mail.Address{
+			Name:    fromTitle,
+			Address: from,
+		}
 
-	// Setup message
-	//for k, v := range headers {
-	//	message += fmt.Sprintf("%s: %s\r\n", k, v)
-	//}
-	//message +=  body
-	bodyData := composeMimeMail(rev.String(), from.String(), title, message)
+		if testTitle, ok := s.emailAddresses[to]; ok {
 
-	// Connect to the SMTP Server
-	servername := os.Getenv("SMTP_SERVER") + ":" + os.Getenv("SMTP_PORT")
+			fromTitle = testTitle
+		}
 
-	host, _, _ := net.SplitHostPort(servername)
+		toAddress := mail.Address{
+			Name:    revTitle,
+			Address: to,
+		}
 
-	auth := smtp.PlainAuth("", os.Getenv("SMTP_ACCOUNT"), os.Getenv("SMTP_PASSWORD"), host)
+		//TODO: security
+		tlsconfig := &tls.Config{
+			InsecureSkipVerify: true,
+			ServerName:         s.host,
+		}
+		conn, err := tls.Dial("tcp", s.Address(), tlsconfig)
+		if err != nil {
+			return err
+		}
 
-	// TLS config
-	tlsconfig := &tls.Config{
-		InsecureSkipVerify: true,
-		ServerName:         host,
+		c, err := smtp.NewClient(conn, s.host)
+		if err != nil {
+			return err
+		}
+
+		if err = c.Auth(s.auth); err != nil {
+			return err
+		}
+
+		if err = c.Mail(fromAddress.Address); err != nil {
+			return err
+		}
+
+		if err = c.Rcpt(toAddress.Address); err != nil {
+			return err
+		}
+		w, err := c.Data()
+		if err != nil {
+			return err
+		}
+
+		_, err = w.Write(messageBytes)
+		if err != nil {
+			return err
+		}
+
+		err = w.Close()
+		if err != nil {
+			return err
+		}
+
+		c.Quit()
 	}
-
-	// Here is the key, you need to call tls.Dial instead of smtp.Dial
-	// for smtp servers running on 465 that require an ssl connection
-	// from the very beginning (no starttls)
-	conn, err := tls.Dial("tcp", servername, tlsconfig)
-	if err != nil {
-		return err
-	}
-
-	c, err := smtp.NewClient(conn, host)
-	if err != nil {
-		return err
-	}
-
-	// Auth
-	if err = c.Auth(auth); err != nil {
-		return err
-	}
-
-	// To && From
-	if err = c.Mail(from.Address); err != nil {
-		return err
-	}
-
-	if err = c.Rcpt(rev.Address); err != nil {
-		return err
-	}
-
-	// Data
-	w, err := c.Data()
-	if err != nil {
-		return err
-	}
-
-	_, err = w.Write(bodyData)
-	if err != nil {
-		return err
-	}
-
-	err = w.Close()
-	if err != nil {
-		return err
-	}
-
-	c.Quit()
 	return nil
 }
 
-func getMXRecord(to string) (mx string, err error) {
+func GetMXRecord(to string) (mx string, err error) {
+
 	var e *mail.Address
 	e, err = mail.ParseAddress(to)
 	if err != nil {
@@ -151,25 +148,27 @@ func getMXRecord(to string) (mx string, err error) {
 }
 
 // Never fails, tries to format the address if possible
-func formatEmailAddress(addr string) string {
+func FormatEmailAddress(addr string) (string, error) {
+
 	e, err := mail.ParseAddress(addr)
 	if err != nil {
-		return addr
+
+		return "", err
 	}
-	return e.String()
+	return e.String(), nil
 }
 
-func encodeRFC2047(str string) string {
+func EncodeRFC2047(str string) string {
 	// use mail's rfc2047 to encode any string
 	addr := mail.Address{Address: str}
 	return strings.Trim(addr.String(), " <>")
 }
 
-func composeMimeMail(to string, from string, subject string, body string) []byte {
+func ComposeMimeMail(to string, from string, subject string, body string) []byte {
 	header := make(map[string]string)
-	header["From"] = formatEmailAddress(from)
-	header["To"] = formatEmailAddress(to)
-	header["Subject"] = encodeRFC2047(subject)
+	header["From"], _ = FormatEmailAddress(from)
+	header["To"], _ = FormatEmailAddress(to)
+	header["Subject"] = EncodeRFC2047(subject)
 	header["MIME-Version"] = "1.0"
 	header["Content-Type"] = "text/plain; charset=\"utf-8\""
 	header["Content-Transfer-Encoding"] = "base64"
