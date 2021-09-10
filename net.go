@@ -1,6 +1,11 @@
 package goutil
 
-import "net/http"
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+)
 
 func GetRequestIPAddress(r *http.Request) string {
 
@@ -12,4 +17,22 @@ func GetRequestIPAddress(r *http.Request) string {
 		IPAddress = r.RemoteAddr
 	}
 	return IPAddress
+}
+
+func FromRequest(entity interface{}, r *http.Request) error {
+
+	body, err := ioutil.ReadAll(r.Body)
+
+	fmt.Println(string(body))
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(body, &entity)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
