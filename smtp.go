@@ -50,7 +50,7 @@ func (s *SmtpServer) SendEmail(from string, to string, title string, message str
 
 	if s.port == "465" {
 
-		smtp.SendMail(s.Address(), s.auth, from, []string{to}, messageBytes)
+		return smtp.SendMail(s.Address(), s.auth, from, []string{to}, messageBytes)
 
 	} else if s.port == "587" {
 
