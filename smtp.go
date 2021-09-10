@@ -46,35 +46,35 @@ func (s *SmtpServer) AddEmailAddress(name string, emailAddress string) error {
 
 func (s *SmtpServer) SendEmail(from string, to string, title string, message string) error {
 
-	messageBytes := ComposeMimeMail(to, from, title, message)
+	fromTitle := ""
+	revTitle := ""
 
-	if s.port == "465" {
+	if testTitle, ok := s.emailAddresses[from]; ok {
+		fromTitle = testTitle
+	}
+
+	fromAddress := mail.Address{
+		Name:    fromTitle,
+		Address: from,
+	}
+
+	if testTitle, ok := s.emailAddresses[to]; ok {
+
+		fromTitle = testTitle
+	}
+
+	toAddress := mail.Address{
+		Name:    revTitle,
+		Address: to,
+	}
+
+	messageBytes := ComposeMimeMail(toAddress.String(), fromAddress.String(), title, message)
+
+	if s.port == "587" {
 
 		return smtp.SendMail(s.Address(), s.auth, from, []string{to}, messageBytes)
 
-	} else if s.port == "587" {
-
-		fromTitle := ""
-		revTitle := ""
-
-		if testTitle, ok := s.emailAddresses[from]; ok {
-			fromTitle = testTitle
-		}
-
-		fromAddress := mail.Address{
-			Name:    fromTitle,
-			Address: from,
-		}
-
-		if testTitle, ok := s.emailAddresses[to]; ok {
-
-			fromTitle = testTitle
-		}
-
-		toAddress := mail.Address{
-			Name:    revTitle,
-			Address: to,
-		}
+	} else if s.port == "465" {
 
 		//TODO: security
 		tlsconfig := &tls.Config{
@@ -165,9 +165,13 @@ func EncodeRFC2047(str string) string {
 }
 
 func ComposeMimeMail(to string, from string, subject string, body string) []byte {
+
 	header := make(map[string]string)
-	header["From"], _ = FormatEmailAddress(from)
-	header["To"], _ = FormatEmailAddress(to)
+	fromAddress, _ := FormatEmailAddress(from)
+	toAddress, _ := FormatEmailAddress(to)
+	fmt.Println(from, to, fromAddress, toAddress, subject, body)
+	header["From"] = fromAddress
+	header["To"] = toAddress
 	header["Subject"] = EncodeRFC2047(subject)
 	header["MIME-Version"] = "1.0"
 	header["Content-Type"] = "text/plain; charset=\"utf-8\""
