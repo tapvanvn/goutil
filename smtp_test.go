@@ -11,7 +11,7 @@ func TestSendEmail(t *testing.T) {
 	var fromEmail = ""
 	var password = ""
 	smtpServer := goutil.NewSmtpServer("smtp.gmail.com", "465", fromEmail, password)
-	if err := smtpServer.SendEmail(fromEmail, "tapvanvn@yahoo.com", "hello", " this is a test email"); err != nil {
+	if err := smtpServer.SendEmail(fromEmail, "tapvanvn@yahoo.com", "hello234", " this is a test email"); err != nil {
 		fmt.Println(err)
 		t.Fail()
 	}

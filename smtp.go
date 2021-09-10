@@ -169,10 +169,10 @@ func ComposeMimeMail(to string, from string, subject string, body string) []byte
 	header := make(map[string]string)
 	fromAddress, _ := FormatEmailAddress(from)
 	toAddress, _ := FormatEmailAddress(to)
-	fmt.Println(from, to, fromAddress, toAddress, subject, body)
+
 	header["From"] = fromAddress
 	header["To"] = toAddress
-	header["Subject"] = EncodeRFC2047(subject)
+	header["Subject"] = subject
 	header["MIME-Version"] = "1.0"
 	header["Content-Type"] = "text/plain; charset=\"utf-8\""
 	header["Content-Transfer-Encoding"] = "base64"
