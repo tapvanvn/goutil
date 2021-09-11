@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
+	"sync"
 )
 
 //FILE SERVER
@@ -23,6 +24,7 @@ type FileCacheSystem struct {
 	fs             http.FileSystem
 	cacheFiles     map[string][]byte
 	totalCacheSize int64
+	writeMux       sync.Mutex
 }
 
 func (fs *FileCacheSystem) CleanCache() {
@@ -64,9 +66,9 @@ func (fs FileCacheSystem) Open(path string) (http.File, error) {
 	} else {
 
 		if bytes, err := ioutil.ReadAll(f); err == nil {
-
+			fs.writeMux.Lock()
 			fs.cacheFiles[path] = bytes
-
+			fs.writeMux.Unlock()
 			f.Close()
 			fs.totalCacheSize += int64(len(bytes))
 			return NewBufferFile(filepath.Base(path), bytes), nil
