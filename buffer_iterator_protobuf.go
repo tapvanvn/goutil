@@ -37,6 +37,38 @@ type PBKeyValue struct {
 	Value []byte
 }
 
+func (iter *BufferIterator) ReadPBBytes() ([]byte, error) {
+	n, err := iter.ReadPBUInt32()
+	if err != nil {
+		return nil, err
+	}
+	return iter.ReadBytes(int(n))
+}
+func (iter *BufferIterator) WritePBBytes(buf []byte) error {
+	l := len(buf)
+	err := iter.WritePBUInt32(uint32(l))
+	if err != nil {
+		return err
+	}
+	return iter.WriteBytes(buf)
+}
+
+func (iter *BufferIterator) SkipPBBytes() error {
+
+	n, err := iter.ReadPBUInt32()
+	if err != nil {
+		return err
+	}
+	return iter.Seek(int(n), os.SEEK_CUR)
+}
+
+func (iter *BufferIterator) ReadPBString() ([]byte, error) {
+	return iter.ReadPBBytes()
+}
+func (iter *BufferIterator) WritePBString(str []byte) error {
+	return iter.WritePBBytes(str)
+}
+
 func (iter *BufferIterator) ReadPBKey() (*PBKey, error) {
 	if n, err := iter.ReadPBUInt32(); err != nil {
 		return nil, err
