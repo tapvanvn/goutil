@@ -59,11 +59,11 @@ func (f *BufferFile) Seek(offset int64, whence int) (int64, error) {
 	var relativeTo int64
 	flen := int64(len(f.data))
 	switch whence {
-	case 0:
+	case os.SEEK_SET:
 		relativeTo = 0
-	case 1:
+	case os.SEEK_CUR:
 		relativeTo = f.offset
-	case 2:
+	case os.SEEK_END:
 		relativeTo = flen
 	}
 

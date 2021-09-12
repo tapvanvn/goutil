@@ -32,6 +32,7 @@ func (fs *FileCacheSystem) CleanCache() {
 	fs.cacheFiles = map[string][]byte{}
 
 }
+
 func (fs *FileCacheSystem) TotalCacheSize() int64 {
 
 	return fs.totalCacheSize
