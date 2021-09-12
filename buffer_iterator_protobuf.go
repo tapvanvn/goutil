@@ -61,7 +61,7 @@ func (iter *BufferIterator) WritePBKey(key *PBKey) error {
 	var n uint = (key.Field << 3) | uint(key.WireType)
 	return iter.WritePBUInt32(uint32(n))
 }
-func (iter *BufferIterator) SkipKey(key *PBKey) error {
+func (iter *BufferIterator) SkipPBKey(key *PBKey) error {
 	switch key.WireType {
 	case PBWIRE_FIXED32:
 		return iter.Seek(4, os.SEEK_CUR)

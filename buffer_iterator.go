@@ -30,6 +30,16 @@ type BufferIterator struct {
 }
 
 //EOF return true if reach to the end of buffer
+func (iter *BufferIterator) Offset() int {
+
+	return iter.offset
+}
+
+func (iter *BufferIterator) Length() int {
+
+	return iter.length
+}
+
 func (iter *BufferIterator) EOB() bool {
 
 	return iter.offset >= iter.length
