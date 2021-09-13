@@ -30,12 +30,22 @@ type FileCacheSystem struct {
 func (fs *FileCacheSystem) CleanCache() {
 
 	fs.cacheFiles = map[string][]byte{}
-
 }
 
 func (fs *FileCacheSystem) TotalCacheSize() int64 {
 
 	return fs.totalCacheSize
+}
+
+func (fs *FileCacheSystem) AddFile(path string, data []byte) {
+	fs.writeMux.Lock()
+	fs.cacheFiles[path] = data
+	fs.writeMux.Unlock()
+}
+
+func (fs *FileCacheSystem) RemoveFile(path string) {
+
+	delete(fs.cacheFiles, path)
 }
 
 // Open opens file
@@ -73,9 +83,7 @@ func (fs FileCacheSystem) Open(path string) (http.File, error) {
 			f.Close()
 			fs.totalCacheSize += int64(len(bytes))
 			return NewBufferFile(filepath.Base(path), bytes), nil
-
 		}
 	}
-
 	return f, nil
 }
