@@ -11,6 +11,7 @@ var ErrBufferIteratorNotImplement = errors.New("Not implemented")
 
 //MARK: Protobuf error
 func NewProtocolBufferError(message string) error {
+
 	return errors.New(message)
 }
 
