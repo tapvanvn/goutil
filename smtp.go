@@ -174,7 +174,7 @@ func ComposeMimeMail(to string, from string, subject string, body string) []byte
 	header["To"] = toAddress
 	header["Subject"] = subject
 	header["MIME-Version"] = "1.0"
-	header["Content-Type"] = "text/plain; charset=\"utf-8\""
+	header["Content-Type"] = "text/html; charset=\"utf-8\""
 	header["Content-Transfer-Encoding"] = "base64"
 
 	message := ""
