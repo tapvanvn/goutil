@@ -1,8 +1,10 @@
 package goutil
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 )
@@ -35,4 +37,32 @@ func FromRequest(entity interface{}, r *http.Request) error {
 	}
 
 	return nil
+}
+
+//ReceiveFile receive the uploaded file
+func ReceiveFile(fieldName string, r *http.Request, maxFileLength int64) (string, []byte, error) {
+
+	r.ParseMultipartForm(maxFileLength)
+
+	file, header, err := r.FormFile(fieldName)
+
+	if err != nil {
+
+		return "", nil, err
+	}
+
+	defer file.Close()
+
+	var buf bytes.Buffer
+
+	_, err = io.Copy(&buf, file)
+
+	if err != nil {
+		return "", nil, err
+	}
+	var res = buf.Bytes()
+
+	defer buf.Reset()
+
+	return header.Filename, res, nil
 }
