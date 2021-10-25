@@ -3,7 +3,6 @@ package goutil
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -25,7 +24,6 @@ func FromRequest(entity interface{}, r *http.Request) error {
 
 	body, err := ioutil.ReadAll(r.Body)
 
-	fmt.Println(string(body))
 	if err != nil {
 		return err
 	}
