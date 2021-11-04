@@ -27,3 +27,40 @@ func MarkdownEscape(str string) string {
 	}
 	return string(rs)
 }
+func Claim(value int, min int, max int) int {
+
+	if value < min {
+
+		return min
+	}
+	if value > max {
+
+		return max
+	}
+	return value
+}
+func Ratio(value int, min int, max int) float32 {
+	if min == max {
+		panic("min cannot equal to max")
+	}
+
+	return float32(Claim(value, min, max)) / float32((max - min))
+}
+
+func ClaimFloat32(value float32, min float32, max float32) float32 {
+	if value < min {
+		return min
+	}
+	if value > max {
+		return max
+	}
+	return value
+}
+
+func RatioFloat32(value float32, min float32, max float32) float32 {
+	if min == max {
+		panic("min cannot equal to max")
+	}
+
+	return ClaimFloat32(value, min, max) / (max - min)
+}
