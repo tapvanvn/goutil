@@ -65,10 +65,28 @@ func (fs FileCacheSystem) Open(path string) (http.File, error) {
 	s, err := f.Stat()
 
 	if s.IsDir() {
-
-		index := strings.TrimSuffix(path, "/") + "/index.html"
 		f.Close()
-		return fs.Open(index)
+		index := strings.TrimSuffix(path, "/") + "/index.html"
+		if f2, err := fs.fs.Open(index); err != nil {
+
+			return nil, err
+
+		} else {
+
+			if bytes, err := ioutil.ReadAll(f2); err == nil {
+				//fs.writeMux.Lock()
+				fs.cacheFiles[path] = bytes
+				//fs.writeMux.Unlock()
+				f2.Close()
+				fs.totalCacheSize += int64(len(bytes))
+				return NewBufferFile(filepath.Base(path), bytes), nil
+
+			} else {
+
+				f2.Close()
+				return nil, err
+			}
+		}
 
 	} else {
 
