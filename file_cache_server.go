@@ -12,8 +12,8 @@ import (
 func NewCacheFileServer(fs http.FileSystem) *FileCacheSystem {
 
 	fileSystem := &FileCacheSystem{
-
-		fs: fs,
+		Mutex: &sync.Mutex{},
+		fs:    fs,
 
 		cacheFiles: map[string][]byte{},
 	}
