@@ -1,6 +1,7 @@
 package goutil
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
@@ -51,7 +52,7 @@ func (fs *FileCacheSystem) RemoveFile(path string) {
 
 // Open opens file
 func (fs FileCacheSystem) Open(path string) (http.File, error) {
-
+	fmt.Println("require-", path)
 	if data, ok := fs.cacheFiles[path]; ok {
 
 		return NewBufferFile(filepath.Base(path), data), nil
