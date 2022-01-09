@@ -52,9 +52,9 @@ func (fs *FileCacheSystem) RemoveFile(path string) {
 
 // Open opens file
 func (fs FileCacheSystem) Open(path string) (http.File, error) {
-	fmt.Println("require-", path)
+
 	if data, ok := fs.cacheFiles[path]; ok {
-		fmt.Println("has cached file")
+
 		return NewBufferFile(filepath.Base(path), data), nil
 	}
 
@@ -68,7 +68,7 @@ func (fs FileCacheSystem) Open(path string) (http.File, error) {
 	s, err := f.Stat()
 
 	if s.IsDir() {
-		fmt.Println("folder try to reach index.html")
+
 		index := strings.TrimSuffix(path, "/") + "/index.html"
 
 		if _, err := fs.fs.Open(index); err != nil {
@@ -77,7 +77,7 @@ func (fs FileCacheSystem) Open(path string) (http.File, error) {
 		}
 
 	} else {
-		fmt.Println("normal open file")
+
 		if bytes, err := ioutil.ReadAll(f); err == nil {
 			f.Close()
 			fs.Lock()
