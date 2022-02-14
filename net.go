@@ -56,6 +56,7 @@ func ReceiveFile(fieldName string, r *http.Request, maxFileLength int64) (string
 	_, err = io.Copy(&buf, file)
 
 	if err != nil {
+
 		return "", nil, err
 	}
 	var res = buf.Bytes()

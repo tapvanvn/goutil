@@ -9,6 +9,10 @@ import (
 	"github.com/tapvanvn/goutil"
 )
 
+func proxy(path string) string {
+	return "abc" + path
+}
+
 func main() {
 	rootPath, err := os.Getwd()
 
@@ -23,6 +27,16 @@ func main() {
 	fileServer := http.FileServer(cacheFileServer)
 
 	http.Handle("/", fileServer)
+
+	cacheFileServer2 := goutil.NewCacheFileServer(http.Dir(rootPath + "/static"))
+
+	cacheFileServer2.AddProxy("proxy", proxy)
+
+	cacheFileServer2.SetPrefix("sv2")
+
+	fileServer2 := http.FileServer(cacheFileServer2)
+
+	http.Handle("/sv2/", fileServer2)
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
