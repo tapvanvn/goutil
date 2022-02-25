@@ -25,6 +25,7 @@ type FileSystem struct {
 }
 
 func (fs *FileSystem) AddProxy(prefix string, fn FileServerProxyFunc) {
+
 	fs.Lock()
 	fs.proxies[prefix] = fn
 	fs.Unlock()
