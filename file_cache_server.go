@@ -83,11 +83,13 @@ func (fs FileCacheSystem) Open(path string) (http.File, error) {
 
 		path = fn(strings.TrimPrefix(path, "/"+prefix))
 	}
+	fs.Lock()
 
 	if data, ok := fs.cacheFiles[path]; ok {
-
+		fs.Unlock()
 		return NewBufferFile(filepath.Base(path), data), nil
 	}
+	fs.Unlock()
 
 	f, err := fs.fs.Open(path)
 
