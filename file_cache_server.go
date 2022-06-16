@@ -1,6 +1,7 @@
 package goutil
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -73,7 +74,9 @@ func (fs *FileCacheSystem) SetPrefix(prefix string) {
 
 // Open opens file
 func (fs FileCacheSystem) Open(path string) (http.File, error) {
-
+	if fs.fs == nil {
+		return nil, errors.New("file not found")
+	}
 	path = "/" + strings.TrimPrefix(path, fs.prefix)
 
 	prefix := path[1:]
