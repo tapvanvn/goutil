@@ -33,6 +33,12 @@ type FileCacheSystem struct {
 	proxies        map[string]FileServerProxyFunc
 }
 
+func (fs *FileCacheSystem) ChangeDir(rawfs http.FileSystem) {
+
+	fs.fs = rawfs
+	fs.CleanCache()
+}
+
 func (fs *FileCacheSystem) CleanCache() {
 
 	fs.cacheFiles = map[string][]byte{}
