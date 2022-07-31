@@ -35,14 +35,18 @@ type FileCacheSystem struct {
 }
 
 func (fs *FileCacheSystem) ChangeDir(rawfs http.FileSystem) {
-
+	fs.Lock()
+	fs.cacheFiles = map[string][]byte{}
 	fs.fs = rawfs
-	fs.CleanCache()
+	fs.Unlock()
+
+	//fmt.Println("dir changed")
 }
 
 func (fs *FileCacheSystem) CleanCache() {
-
+	fs.Lock()
 	fs.cacheFiles = map[string][]byte{}
+	fs.Unlock()
 }
 
 func (fs *FileCacheSystem) TotalCacheSize() int64 {
@@ -51,6 +55,13 @@ func (fs *FileCacheSystem) TotalCacheSize() int64 {
 }
 
 func (fs *FileCacheSystem) AddFile(path string, data []byte) {
+	if len(path) == 0 {
+		return
+	}
+	if path[0] != '/' {
+		path = "/" + path
+	}
+	fmt.Println("addFile:", path)
 	fs.Lock()
 	fs.cacheFiles[path] = data
 	fs.Unlock()
@@ -74,11 +85,13 @@ func (fs *FileCacheSystem) SetPrefix(prefix string) {
 
 // Open opens file
 func (fs FileCacheSystem) Open(path string) (http.File, error) {
+	//fmt.Println("open", path)
 	if fs.fs == nil {
+		//fmt.Println("empty file cache")
 		return nil, errors.New("file not found")
 	}
 	path = "/" + strings.TrimPrefix(path, fs.prefix)
-
+	//fmt.Println("\tpath:", path)
 	prefix := path[1:]
 
 	firstSlash := strings.Index(prefix, "/")
