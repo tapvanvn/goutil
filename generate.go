@@ -2,6 +2,7 @@ package goutil
 
 import (
 	crypto_rand "crypto/rand"
+	"encoding/base32"
 	"encoding/binary"
 	"log"
 	"math/rand"
@@ -117,4 +118,13 @@ func VerifyPasswords(passwordShadow string, password string, salt string) bool {
 	}
 
 	return true
+}
+
+func Gen2FASecret() string {
+	var b [10]byte
+	_, err := crypto_rand.Read(b[:])
+	if err != nil {
+		panic("cannot seed math/rand package with cryptographically secure random number generator")
+	}
+	return base32.StdEncoding.EncodeToString(b[:])
 }
