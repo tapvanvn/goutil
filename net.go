@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
+
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func GetRequestIPAddress(r *http.Request) string {
@@ -22,13 +23,17 @@ func GetRequestIPAddress(r *http.Request) string {
 
 func FromRequest(entity interface{}, r *http.Request) error {
 
-	body, err := ioutil.ReadAll(r.Body)
-
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return err
 	}
+	content_type := r.Header.Get("Content-Type")
 
-	err = json.Unmarshal(body, &entity)
+	if content_type == "application/bson" {
+		err = bson.Unmarshal(body, entity)
+	} else {
+		err = json.Unmarshal(body, &entity)
+	}
 
 	if err != nil {
 		return err
@@ -37,7 +42,7 @@ func FromRequest(entity interface{}, r *http.Request) error {
 	return nil
 }
 
-//ReceiveFile receive the uploaded file
+// ReceiveFile receive the uploaded file
 func ReceiveFile(fieldName string, r *http.Request, maxFileLength int64) (string, []byte, error) {
 
 	r.ParseMultipartForm(maxFileLength)
